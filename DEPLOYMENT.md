@@ -171,22 +171,35 @@ binary (git hooks are a local-dev-only concern) can never fail the install. If y
 error, ignore it and check whether the build below actually succeeds; if it does, the install was
 fine.
 
-**Use `npm run build:webpack`, not plain `npm run build`, on shared hosting.** Next.js 16 builds with
-Turbopack by default, which is a multi-threaded native (Rust) process. Shared cPanel hosting almost
-always runs under CloudLinux LVE, which caps how many processes/threads your account may spawn —
-Turbopack hitting that cap fails with a panic like:
+**Use `npm run build:webpack`, not plain `npm run build`, on shared hosting.** Next.js 16 uses a
+native (Rust) compiler for code transforms regardless of bundler — Turbopack *or* webpack both shell
+out to it — and that compiler spawns a multi-threaded pool sized to the CPU count it sees. Shared
+cPanel hosting almost always runs under CloudLinux LVE, which caps how many processes/threads your
+account may spawn (often far below the CPU count the OS reports, since that count describes the
+whole physical host, not your slice of it). Hitting that cap fails with a panic like:
 
 ```
 thread '<unnamed>' panicked ... The global thread pool has not been initialized.:
 ThreadPoolBuildError { kind: IOError(Os { code: 11, kind: WouldBlock, message: "Resource temporarily unavailable" }) }
 ```
 
-`build:webpack` runs `next build --webpack` (Next 16's documented opt-out flag) followed by the same
-`prepare-standalone.mjs` copy step `postbuild` would normally run — webpack is pure Node.js, so it
-never touches the OS thread limit that trips up Turbopack. This only affects the *build* step; the
-app still runs exactly the same either way afterward, since both produce the same `.next/standalone`
-output. (Turbopack stays the default for local dev and Docker — this is a shared-hosting-specific
-workaround, not a project-wide switch.)
+`build:webpack` sets `RAYON_NUM_THREADS=1`, which caps that native compiler's thread pool at one
+thread instead of one-per-CPU — small enough to fit inside even a tight LVE limit — then runs
+`next build --webpack` (Next 16's documented Turbopack opt-out) followed by the same
+`prepare-standalone.mjs` copy step `postbuild` would normally run. `--webpack` alone isn't what fixes
+the panic (the native compiler runs either way); the thread cap is what does. Builds are slower this
+way (single-threaded compilation), but that only affects build time, not the running app — this only
+affects the *build* step, and produces the same `.next/standalone` output either way. (Turbopack
+stays the default for local dev and Docker — this is a shared-hosting-specific workaround, not a
+project-wide switch.)
+
+If it **still** panics with `RAYON_NUM_THREADS=1`, your account's process/thread ceiling is tighter
+than even a single extra thread allows (check it yourself with `ulimit -u` in Terminal). At that
+point there's no build-flag fix left — either ask your host to raise the limit for your account, or
+stop building on the server entirely: run `npm run build:webpack` on your own machine (Windows/Mac/
+Linux all fine, no LVE limit there), then upload just `.next/standalone/`, and point Application
+startup file at the uploaded `server.js` — the server never needs to run `next build` at all in that
+setup, only `node server.js`.
 
 Now run migrations and seed the first admin user. These read `DATABASE_URL` etc. straight from the
 shell, so export the same values you put in cPanel's environment-variable editor (or `set -a; source
@@ -239,8 +252,10 @@ Then **Restart** the app in Setup Node.js App.
 ## Troubleshooting
 
 - **`thread '<unnamed>' panicked ... The global thread pool has not been initialized` during build** —
-  Turbopack hit your account's CloudLinux process/thread limit. Use `npm run build:webpack` instead of
-  `npm run build` (see step 6) — same output, no native thread pool.
+  Next's native compiler hit your account's CloudLinux process/thread limit. Use
+  `npm run build:webpack` (see step 6) — it caps the compiler at one thread via `RAYON_NUM_THREADS=1`.
+  If it still panics, the limit is tighter than that allows; build locally and upload
+  `.next/standalone/` instead (same section has the exact steps).
 - **"Missing production configuration" in the log at boot** — one of `RESEND_API_KEY`, `EMAIL_FROM`,
   `S3_BUCKET` isn't set in the Node.js App's environment variables (step 5). The error message names
   the missing one directly.
