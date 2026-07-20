@@ -22,6 +22,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx src/db/seed.ts",
+    "db:bootstrap-admin": "tsx src/db/bootstrap-admin.ts",
     "db:reset": "drizzle-kit drop && drizzle-kit migrate && npm run db:seed",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",

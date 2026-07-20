@@ -46,6 +46,9 @@ next-env.d.ts
 
 # Local object storage (dev fallback for the S3 provider)
 /.storage/
+
+# Deployment artifacts (built locally, uploaded by hand — see DEPLOYMENT.md)
+*.zip
 F.TXT
 invoicelogic.txt
 masterprompt.txt

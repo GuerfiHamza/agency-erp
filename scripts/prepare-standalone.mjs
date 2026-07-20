@@ -10,7 +10,7 @@
 // `npm run build`, then overwrites the same files with identical content via
 // its own COPY steps — redundant, not conflicting.
 
-import { cpSync, existsSync, mkdirSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 
 const root = process.cwd();
@@ -32,3 +32,19 @@ function copy(from, to) {
 
 copy(join(root, 'public'), join(standalone, 'public'));
 copy(join(root, '.next', 'static'), join(standalone, '.next', 'static'));
+
+// Observed on this project (reproduced on a clean `rm -rf .next` build, not a
+// stale artifact): Next's output-file-tracing for `output: 'standalone'` has
+// copied the ENTIRE project root into `.next/standalone` alongside the real
+// pruned output — src/, test/, drizzle/, graphify-out/, docs, configs, even a
+// copy of the local .env. node_modules itself IS correctly pruned (~60
+// top-level packages vs. 500+ in the real one), so this only affects loose
+// top-level files/dirs, not the dependency tree. Root cause not confirmed;
+// pruning here is cheap insurance regardless of cause, and critical because an
+// uploaded/deployed standalone bundle must never carry a copy of local `.env`.
+const KEEP = new Set(['server.js', 'node_modules', '.next', 'public']);
+for (const entry of readdirSync(standalone)) {
+  if (KEEP.has(entry)) continue;
+  rmSync(join(standalone, entry), { recursive: true, force: true });
+  console.warn(`[prepare-standalone] removed unexpected entry: ${entry}`);
+}
