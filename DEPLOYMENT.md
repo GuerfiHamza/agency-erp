@@ -162,18 +162,31 @@ cd /home/youruser/agency-erp
 # package.json. SKIP_ENV_VALIDATION defers the production env check to server
 # start (instrumentation.ts) — matches how the Docker image builds this same app.
 npm ci --include=dev
-SKIP_ENV_VALIDATION=1 npm run build
+SKIP_ENV_VALIDATION=1 npm run build:webpack
 ```
 
 If `npm ci` still fails on `sh: line 1: husky: command not found` even with `--include=dev`, it's
 harmless — `package.json`'s `prepare` script is `husky || true` specifically so a missing husky
 binary (git hooks are a local-dev-only concern) can never fail the install. If you see that exact
-error, ignore it and check whether `npm run build` below actually succeeds; if it does, the install
-was fine.
+error, ignore it and check whether the build below actually succeeds; if it does, the install was
+fine.
 
-`npm run build` also runs `postbuild` automatically, which copies `public/` and `.next/static/` into
-`.next/standalone/` — that's what makes `.next/standalone/server.js` (your Application startup file
-from step 4) actually able to serve the app standalone.
+**Use `npm run build:webpack`, not plain `npm run build`, on shared hosting.** Next.js 16 builds with
+Turbopack by default, which is a multi-threaded native (Rust) process. Shared cPanel hosting almost
+always runs under CloudLinux LVE, which caps how many processes/threads your account may spawn —
+Turbopack hitting that cap fails with a panic like:
+
+```
+thread '<unnamed>' panicked ... The global thread pool has not been initialized.:
+ThreadPoolBuildError { kind: IOError(Os { code: 11, kind: WouldBlock, message: "Resource temporarily unavailable" }) }
+```
+
+`build:webpack` runs `next build --webpack` (Next 16's documented opt-out flag) followed by the same
+`prepare-standalone.mjs` copy step `postbuild` would normally run — webpack is pure Node.js, so it
+never touches the OS thread limit that trips up Turbopack. This only affects the *build* step; the
+app still runs exactly the same either way afterward, since both produce the same `.next/standalone`
+output. (Turbopack stays the default for local dev and Docker — this is a shared-hosting-specific
+workaround, not a project-wide switch.)
 
 Now run migrations and seed the first admin user. These read `DATABASE_URL` etc. straight from the
 shell, so export the same values you put in cPanel's environment-variable editor (or `set -a; source
@@ -215,7 +228,7 @@ Then back in Terminal:
 source /home/youruser/nodevenv/agency-erp/22/bin/activate
 cd /home/youruser/agency-erp
 npm ci --include=dev
-SKIP_ENV_VALIDATION=1 npm run build
+SKIP_ENV_VALIDATION=1 npm run build:webpack
 npx drizzle-kit migrate   # only if this update includes new migrations
 ```
 
@@ -225,6 +238,9 @@ Then **Restart** the app in Setup Node.js App.
 
 ## Troubleshooting
 
+- **`thread '<unnamed>' panicked ... The global thread pool has not been initialized` during build** —
+  Turbopack hit your account's CloudLinux process/thread limit. Use `npm run build:webpack` instead of
+  `npm run build` (see step 6) — same output, no native thread pool.
 - **"Missing production configuration" in the log at boot** — one of `RESEND_API_KEY`, `EMAIL_FROM`,
   `S3_BUCKET` isn't set in the Node.js App's environment variables (step 5). The error message names
   the missing one directly.
