@@ -41,7 +41,7 @@ not into git.
 Your connection string will be:
 
 ```
-postgresql://youruser_dbadmin:YOUR_PASSWORD@localhost:5432/youruser_erp
+postgresql://seaukeny_erp_admin:HamzaMizou42@localhost:5432/seaukeny_erp
 ```
 
 (`localhost` because the Node app and the database live on the same server — this is not reachable
@@ -154,12 +154,22 @@ by design (an app restart or migration shouldn't silently lose uploaded files). 
 source /home/youruser/nodevenv/agency-erp/22/bin/activate
 cd /home/youruser/agency-erp
 
-# Install dependencies and build. SKIP_ENV_VALIDATION defers the production
-# env check to server start (instrumentation.ts) — matches how the Docker
-# image builds this same app.
-npm ci
+# Install dependencies and build. --include=dev is required even though this
+# is a production deploy: the build itself needs devDependencies (typescript,
+# tailwindcss) and migrations need drizzle-kit — cPanel's Node.js Selector
+# environment often causes a plain `npm ci` to silently skip devDependencies,
+# which shows up as "command not found" errors for tools you know are in
+# package.json. SKIP_ENV_VALIDATION defers the production env check to server
+# start (instrumentation.ts) — matches how the Docker image builds this same app.
+npm ci --include=dev
 SKIP_ENV_VALIDATION=1 npm run build
 ```
+
+If `npm ci` still fails on `sh: line 1: husky: command not found` even with `--include=dev`, it's
+harmless — `package.json`'s `prepare` script is `husky || true` specifically so a missing husky
+binary (git hooks are a local-dev-only concern) can never fail the install. If you see that exact
+error, ignore it and check whether `npm run build` below actually succeeds; if it does, the install
+was fine.
 
 `npm run build` also runs `postbuild` automatically, which copies `public/` and `.next/static/` into
 `.next/standalone/` — that's what makes `.next/standalone/server.js` (your Application startup file
@@ -204,7 +214,7 @@ Then back in Terminal:
 ```bash
 source /home/youruser/nodevenv/agency-erp/22/bin/activate
 cd /home/youruser/agency-erp
-npm ci
+npm ci --include=dev
 SKIP_ENV_VALIDATION=1 npm run build
 npx drizzle-kit migrate   # only if this update includes new migrations
 ```

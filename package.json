@@ -24,7 +24,7 @@
     "db:reset": "drizzle-kit drop && drizzle-kit migrate && npm run db:seed",
     "db:up": "docker compose up -d postgres",
     "db:down": "docker compose down",
-    "prepare": "husky"
+    "prepare": "husky || true"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
