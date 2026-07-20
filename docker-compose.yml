@@ -1,0 +1,57 @@
+# Local development dependencies.
+#   docker compose up -d postgres   (or: npm run db:up)
+#
+# The app itself runs on the host via `npm run dev` for fast refresh. The `app`
+# service exists to verify the production image builds and boots; start it
+# explicitly with `docker compose --profile production up --build app`.
+#
+# Redis is a declared dependency (bullmq, redis) but nothing reads it yet. It is
+# added here in Phase 4, alongside the code that needs it.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: agency-erp-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: agency_erp
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      # -d/-U are required: without them pg_isready reports the container ready
+      # while the target database is still initializing.
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d agency_erp']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  app:
+    profiles: ['production']
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_APP_URL: http://localhost:3000
+    container_name: agency-erp-app
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      # `postgres` resolves on the compose network — not localhost, which inside
+      # the container points at the container itself.
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/agency_erp
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?set BETTER_AUTH_SECRET in .env}
+      BETTER_AUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

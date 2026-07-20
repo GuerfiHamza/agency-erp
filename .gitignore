@@ -29,6 +29,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+dev-server.log
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -39,3 +40,17 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# graphify knowledge-graph output (generated)
+/graphify-out/
+
+# Local object storage (dev fallback for the S3 provider)
+/.storage/
+F.TXT
+invoicelogic.txt
+masterprompt.txt
+memory.md
+CLAUDE.md
+.claude/
+AGENTS.md
+README.md

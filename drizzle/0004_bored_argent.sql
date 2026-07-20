@@ -1,0 +1,1 @@
+ALTER TABLE "companies" ADD COLUMN "document_reference_code" text;

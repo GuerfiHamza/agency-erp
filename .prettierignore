@@ -1,0 +1,16 @@
+.next/
+node_modules/
+drizzle/
+graphify-out/
+public/
+coverage/
+next-env.d.ts
+package-lock.json
+F.TXT
+
+# Tool-managed generated block (<!-- BEGIN:nextjs-agent-rules -->). Formatting it
+# fights whatever regenerates it.
+AGENTS.md
+
+# Agent/skill configuration owned by the tooling, not by this project.
+.claude/

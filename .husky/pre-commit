@@ -1,0 +1,5 @@
+npx lint-staged
+
+# lint-staged only sees staged files, so a type error introduced in an unstaged
+# file that a staged file depends on would slip through. Typecheck the project.
+npm run typecheck

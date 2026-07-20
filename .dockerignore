@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.husky
+drizzle/meta
+graphify-out
+coverage
+.env
+.env.*
+!.env.example
+npm-debug.log*
+README.md
+F.TXT
+Dockerfile
+.dockerignore
+docker-compose.yml

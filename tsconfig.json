@@ -1,10 +1,18 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    // Next 16 requires Node 20.9+ and Chrome/Edge/Firefox 111+, Safari 16.4+,
+    // so ES2022 downlevelling is unnecessary.
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
+    // `strict` alone still lets arr[i] and record[key] be typed as defined.
+    // ERP code indexes lookup maps constantly; this makes the undefined explicit.
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
     "module": "esnext",

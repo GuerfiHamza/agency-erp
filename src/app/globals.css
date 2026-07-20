@@ -1,26 +1,234 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+/**
+ * Design system.
+ *
+ * Palette adapted from the Stitch "Nexus Agency" mockup (f.txt), which is a
+ * Material Design 3 dark token set. Those raw M3 names (surface-container-high,
+ * on-primary-fixed-variant, ...) are collapsed here into the smaller semantic
+ * set shadcn/ui expects, so components stay swappable and there is exactly one
+ * name per role.
+ *
+ * The mockup is dark-only; the light theme below is derived from it so the app
+ * satisfies the "dark mode works" requirement in both directions.
+ */
+
+/* next-themes toggles `.dark` on <html>, matching the mockup's darkMode:"class". */
+@custom-variant dark (&:is(.dark *));
 
 :root {
+  --radius: 0.75rem;
+
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #12131a;
+
+  --card: #ffffff;
+  --card-foreground: #12131a;
+
+  --popover: #ffffff;
+  --popover-foreground: #12131a;
+
+  /* Accent orange is shared across themes — it is the brand constant. */
+  --primary: #ff6a00;
+  --primary-foreground: #fff7ed;
+
+  --secondary: #f2f3f7;
+  --secondary-foreground: #2f3038;
+
+  --muted: #f2f3f7;
+  --muted-foreground: #5f6270;
+
+  --accent: #e8eaf2;
+  --accent-foreground: #12131a;
+
+  --destructive: #b3261e;
+  --destructive-foreground: #ffdad6;
+
+  --success: #16a34a;
+  --success-foreground: #f0fdf4;
+
+  --warning: #b45309;
+  --warning-foreground: #fffbeb;
+
+  --border: #e1e2ea;
+  --input: #e1e2ea;
+  --ring: #ff6a00;
+
+  /* Glass surfaces read as plain panels in light mode; blur over white is noise. */
+  --glass-bg: rgb(255 255 255 / 0.85);
+  --glass-border: rgb(18 19 26 / 0.08);
+  --glass-shadow: 0 20px 40px rgb(18 19 26 / 0.08);
+  --glass-inner-glow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+
+  --scrollbar-track: #f2f3f7;
+  --scrollbar-thumb: #c9cbd6;
+  --scrollbar-thumb-hover: #a8abba;
+}
+
+.dark {
+  /* #09090B is the mockup's <body> background — deeper than its M3 surface token. */
+  --background: #09090b;
+  --foreground: #e3e1ec;
+
+  --card: #1e1f26; /* surface-container */
+  --card-foreground: #e3e1ec;
+
+  --popover: #1a1b22; /* surface-container-low */
+  --popover-foreground: #e3e1ec;
+
+  --primary: #ff6a00; /* primary-container in M3 terms; the visible accent */
+  --primary-foreground: #fff7ed;
+
+  --secondary: #292931; /* surface-container-high */
+  --secondary-foreground: #e3e1ec;
+
+  --muted: #1e1f26;
+  --muted-foreground: #8d90a0; /* outline */
+
+  --accent: #33343c; /* surface-variant */
+  --accent-foreground: #e3e1ec;
+
+  --destructive: #93000a; /* error-container */
+  --destructive-foreground: #ffdad6; /* on-error-container */
+
+  --success: #22c55e;
+  --success-foreground: #052e16;
+
+  --warning: #f59e0b;
+  --warning-foreground: #1c1917;
+
+  --border: #33343c;
+  --input: #33343c;
+  --ring: #fdba74; /* M3 primary — brighter than the accent, so focus stays visible */
+
+  --glass-bg: rgb(24 24 27 / 0.8);
+  --glass-border: rgb(255 255 255 / 0.08);
+  --glass-shadow: 0 20px 40px rgb(0 0 0 / 0.4);
+  --glass-inner-glow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+
+  --scrollbar-track: #09090b;
+  --scrollbar-thumb: #33343c;
+  --scrollbar-thumb-hover: #434655;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  /* Layout rhythm from the mockup's spacing scale. */
+  --spacing-gutter: 24px;
+  --container-max: 1440px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    /* The mockup hides horizontal overflow globally; scoping it to the body
+       keeps wide tables scrollable inside their own container. */
+    overflow-x: hidden;
+  }
+
+  /* Keyboard focus must stay visible even where a component forgets its ring. */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 10px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+
+  /* Firefox has no ::-webkit-scrollbar; this is the standards-track equivalent. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/**
+ * The mockup's signature surface. `backdrop-filter` is the expensive part, so
+ * this is a named utility rather than a base style — apply it to panels, not to
+ * every card in a long list.
+ */
+@utility glass {
+  background: var(--glass-bg);
+  /* Standard property only. Lightning CSS adds -webkit-backdrop-filter per the
+     browser targets; writing the prefix by hand makes it collapse the pair and
+     drop the unprefixed property, which silently disables the blur. */
+  backdrop-filter: blur(24px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+@utility inner-glow {
+  box-shadow: var(--glass-inner-glow);
+}
+
+/**
+ * For scrollable panels where the base thin scrollbar reads as visual noise
+ * against a short list that only occasionally overflows — the sidebar nav is
+ * the first case. Content still scrolls (wheel, touch, keyboard); only the
+ * bar itself is invisible.
+ */
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
