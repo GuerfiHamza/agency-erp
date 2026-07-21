@@ -29,9 +29,14 @@ export interface DocumentParty {
   taxId?: string | null;
   email?: string | null;
   phone?: string | null;
-  /** Legal identifiers below are issuer-only in practice — a client/supplier party never sets them. */
+  /**
+   * Legal identifiers. `activity`/`managerName` are issuer-only in practice — a
+   * client/supplier party never sets them. The rest (RC/NIF/NIS/Article) can
+   * also come from a company-type client, printed the same way as the issuer's.
+   */
   registrationNumber?: string | null;
   nif?: string | null;
+  nis?: string | null;
   articleNumber?: string | null;
   activity?: string | null;
   managerName?: string | null;
@@ -88,6 +93,7 @@ function LegalLines({ party }: { party: DocumentParty }) {
       {party.activity && <Text>Activité : {party.activity}</Text>}
       {party.registrationNumber && <Text>N° Immatriculation : {party.registrationNumber}</Text>}
       {party.nif && <Text>NIF : {party.nif}</Text>}
+      {party.nis && <Text>NIS : {party.nis}</Text>}
       {party.articleNumber && <Text>N° Article : {party.articleNumber}</Text>}
       {!party.nif && party.taxId && <Text>NIF : {party.taxId}</Text>}
     </>

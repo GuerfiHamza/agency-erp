@@ -82,6 +82,10 @@ export async function GET(
           addressLines: clientAddressLines,
           taxId: client.taxId,
           email: client.email,
+          registrationNumber: client.registrationNumber,
+          nif: client.nif,
+          nis: client.nis,
+          articleNumber: client.articleNumber,
         }}
         issueDate={invoice.issueDate}
         meta={[

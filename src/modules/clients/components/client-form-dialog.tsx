@@ -101,6 +101,10 @@ export function ClientFormDialog({ client, ownerOptions, open, onOpenChange }: P
       status: client?.status ?? 'prospect',
       legalName: client?.legalName ?? '',
       taxId: client?.taxId ?? '',
+      registrationNumber: client?.registrationNumber ?? '',
+      nif: client?.nif ?? '',
+      nis: client?.nis ?? '',
+      articleNumber: client?.articleNumber ?? '',
       email: client?.email ?? '',
       phone: client?.phone ?? '',
       website: client?.website ?? '',
@@ -116,6 +120,10 @@ export function ClientFormDialog({ client, ownerOptions, open, onOpenChange }: P
       notes: client?.notes ?? '',
     },
   });
+
+  // Same tolerated `react-hooks/incompatible-library` warning as Opportunities' lostReason
+  // (form.watch() cannot be memoized by the React Compiler).
+  const isCompany = form.watch('type') === 'company';
 
   function onSubmit(values: ClientInput) {
     setFormError(null);
@@ -265,6 +273,25 @@ export function ClientFormDialog({ client, ownerOptions, open, onOpenChange }: P
               <TextField control={form.control} name="legalName" label="Legal name" disabled={isPending} />
               <TextField control={form.control} name="taxId" label="Tax ID" disabled={isPending} />
             </div>
+
+            {isCompany && (
+              <div className="grid gap-4 rounded-md border border-dashed p-4 sm:grid-cols-2">
+                <TextField
+                  control={form.control}
+                  name="registrationNumber"
+                  label="RC (N° d'immatriculation)"
+                  disabled={isPending}
+                />
+                <TextField control={form.control} name="nif" label="NIF" disabled={isPending} />
+                <TextField control={form.control} name="nis" label="NIS" disabled={isPending} />
+                <TextField
+                  control={form.control}
+                  name="articleNumber"
+                  label="N° Article (AI)"
+                  disabled={isPending}
+                />
+              </div>
+            )}
 
             <TextField
               control={form.control}

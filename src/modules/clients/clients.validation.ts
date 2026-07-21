@@ -88,6 +88,11 @@ export const clientFormSchema = z.object({
 
   legalName: optionalText(),
   taxId: optionalText(),
+  /** Only meaningful for a company-type client; the form hides these for an individual. */
+  registrationNumber: optionalText(),
+  nif: optionalText(),
+  nis: optionalText(),
+  articleNumber: optionalText(),
   email: optionalEmail,
   phone: optionalText(40),
   website: optionalWebsite,

@@ -132,6 +132,10 @@ function FormMessage({ className, ...props }: React.ComponentProps<'p'>) {
     <p
       data-slot="form-message"
       id={formMessageId}
+      // Only an actual validation error is an alert — the description text
+      // this same component renders when there's no error would otherwise
+      // interrupt screen reader users on every render for no reason.
+      role={error ? 'alert' : undefined}
       className={cn('text-sm text-destructive', className)}
       {...props}
     >

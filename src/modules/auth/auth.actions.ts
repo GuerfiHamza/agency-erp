@@ -14,6 +14,7 @@ import {
   ValidationError,
 } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { assertWithinRateLimit, clientIp } from '@/lib/rate-limit';
 import { err, ok, type Result } from '@/types';
 
 import { registerCompanyForUser } from './auth.service';
@@ -64,6 +65,12 @@ function fromAuthApiError(error: unknown, logMessage: string): Result<never> {
 }
 
 export async function signInAction(input: unknown): Promise<Result<{ userId: string }>> {
+  try {
+    assertWithinRateLimit(`sign-in:${await clientIp()}`, 10, 5 * 60);
+  } catch (error) {
+    return err(toErrorPayload(error));
+  }
+
   const parsed = signInSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -134,6 +141,12 @@ export async function onboardAction(input: unknown): Promise<Result<{ companyId:
  * of a leaked email list have accounts here.
  */
 export async function forgotPasswordAction(input: unknown): Promise<Result<{ sent: true }>> {
+  try {
+    assertWithinRateLimit(`forgot-password:${await clientIp()}`, 5, 15 * 60);
+  } catch (error) {
+    return err(toErrorPayload(error));
+  }
+
   const parsed = forgotPasswordSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -157,6 +170,12 @@ export async function forgotPasswordAction(input: unknown): Promise<Result<{ sen
 
 /** Finish a password reset using the emailed token. */
 export async function resetPasswordAction(input: unknown): Promise<Result<{ reset: true }>> {
+  try {
+    assertWithinRateLimit(`reset-password:${await clientIp()}`, 10, 15 * 60);
+  } catch (error) {
+    return err(toErrorPayload(error));
+  }
+
   const parsed = resetPasswordSchema.safeParse(input);
 
   if (!parsed.success) {
@@ -186,6 +205,12 @@ export async function resetPasswordAction(input: unknown): Promise<Result<{ rese
 
 /** Re-send a verification email. Reports success regardless, same as reset. */
 export async function resendVerificationAction(input: unknown): Promise<Result<{ sent: true }>> {
+  try {
+    assertWithinRateLimit(`resend-verification:${await clientIp()}`, 5, 15 * 60);
+  } catch (error) {
+    return err(toErrorPayload(error));
+  }
+
   const parsed = resendVerificationSchema.safeParse(input);
 
   if (!parsed.success) {

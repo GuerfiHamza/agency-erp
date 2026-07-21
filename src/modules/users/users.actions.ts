@@ -8,6 +8,7 @@ import { auth } from '@/lib/auth/auth';
 import { requirePermission, requireTenantSession } from '@/lib/auth/session';
 import { toErrorPayload, validationErrorFromZod } from '@/lib/errors';
 import { logger } from '@/lib/logger';
+import { assertWithinRateLimit, clientIp } from '@/lib/rate-limit';
 import { getCompany } from '@/modules/companies/companies.service';
 import { err, ok, type Result } from '@/types';
 
@@ -196,6 +197,12 @@ export async function deleteUserAction(input: unknown): Promise<Result<{ deleted
  * single-use, and time-bounded by the service.
  */
 export async function acceptInvitationAction(input: unknown): Promise<Result<{ signedIn: boolean }>> {
+  try {
+    assertWithinRateLimit(`accept-invitation:${await clientIp()}`, 10, 15 * 60);
+  } catch (error) {
+    return err(toErrorPayload(error));
+  }
+
   const parsed = acceptInvitationSchema.safeParse(input);
 
   if (!parsed.success) return err(toErrorPayload(validationErrorFromZod(parsed.error)));

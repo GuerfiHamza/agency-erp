@@ -22,6 +22,17 @@ export const clients = pgTable(
 
     legalName: text('legal_name'),
     taxId: text('tax_id'),
+    /**
+     * Algerian legal identifiers, relevant to a company-type client only (see
+     * `type`) — printed on issued quotes/proformas/invoices the same way the
+     * issuer's own identifiers are. Nullable regardless of `type`: nothing
+     * enforces they're set even for a company, since not every client has
+     * them on file yet.
+     */
+    registrationNumber: text('registration_number'),
+    nif: text('nif'),
+    nis: text('nis'),
+    articleNumber: text('article_number'),
     email: text('email'),
     phone: text('phone'),
     website: text('website'),

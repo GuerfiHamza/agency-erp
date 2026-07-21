@@ -16,6 +16,26 @@
 /* next-themes toggles `.dark` on <html>, matching the mockup's darkMode:"class". */
 @custom-variant dark (&:is(.dark *));
 
+/**
+ * Tailwind v4's `animate-in`/`animate-out`/`fade-*`/`zoom-*` utilities (used by
+ * every Radix dialog/sheet/dropdown in this app) don't check the OS-level
+ * reduced-motion preference on their own — this is the standard override that
+ * makes them respect it, collapsing any animation/transition to effectively
+ * instant rather than disabling it outright (a duration of 0 can skip
+ * `transitionend`/`animationend` events some components rely on to know
+ * they're done).
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 :root {
   --radius: 0.75rem;
 
