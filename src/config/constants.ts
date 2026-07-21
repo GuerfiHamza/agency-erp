@@ -4,7 +4,8 @@
  */
 
 export const APP_NAME = 'NEODOTT';
-export const APP_DESCRIPTION = 'Enterprise agency resource planning';
+export const APP_DESCRIPTION =
+  "NEODOTT's internal agency management platform — clients, projects, and finances in one place.";
 
 /** Route segments that must stay in sync with the App Router folder names. */
 export const ROUTES = {
@@ -23,6 +24,17 @@ export const ROUTES = {
 } as const;
 
 export type Route = (typeof ROUTES)[keyof typeof ROUTES];
+
+/**
+ * Better Auth's session cookie. The `__Secure-` prefix is added automatically
+ * when secure cookies are on (production), so both names must be checked.
+ * Shared between `proxy.ts` (optimistic presence check), `session.ts` (clears
+ * a stale cookie before bouncing to sign-in), and the clear-session route.
+ */
+export const SESSION_COOKIE_NAMES = [
+  'better-auth.session_token',
+  '__Secure-better-auth.session_token',
+] as const;
 
 export const PAGINATION = {
   defaultPage: 1,

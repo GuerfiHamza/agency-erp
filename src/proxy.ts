@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 
-import { ROUTES } from '@/config/constants';
+import { ROUTES, SESSION_COOKIE_NAMES } from '@/config/constants';
 
 /**
  * Proxy — what earlier Next.js versions called Middleware.
@@ -35,14 +35,8 @@ const PROTECTED_PREFIXES = [ROUTES.dashboard, ROUTES.onboarding];
  */
 const AUTH_ROUTES: string[] = [ROUTES.signIn, ROUTES.signUp, ROUTES.forgotPassword];
 
-/**
- * Better Auth's session cookie. The `__Secure-` prefix is added automatically
- * when secure cookies are on (production), so both names must be checked.
- */
-const SESSION_COOKIES = ['better-auth.session_token', '__Secure-better-auth.session_token'];
-
 function hasSessionCookie(request: NextRequest): boolean {
-  return SESSION_COOKIES.some((name) => Boolean(request.cookies.get(name)?.value));
+  return SESSION_COOKIE_NAMES.some((name) => Boolean(request.cookies.get(name)?.value));
 }
 
 export function proxy(request: NextRequest): NextResponse {

@@ -1,10 +1,10 @@
 import 'server-only';
 
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 
-import { ROUTES } from '@/config/constants';
+import { ROUTES, SESSION_COOKIE_NAMES } from '@/config/constants';
 import type { PermissionSlug } from '@/config/permissions';
 import { ForbiddenError, UnauthorizedError } from '@/lib/errors';
 import { getUserPermissions } from '@/modules/rbac/rbac.service';
@@ -63,6 +63,20 @@ export async function requireSession(): Promise<Session> {
   const session = await getSession();
 
   if (!session) {
+    // A cookie can outlive the session it names — expired, deleted, or the
+    // user was deactivated. proxy.ts only checks presence, so leaving a
+    // stale cookie in place would make it bounce this same request straight
+    // back here from /sign-in. Route through the clear-session handler
+    // (a Server Component cannot delete cookies itself) whenever a cookie
+    // is actually there to clear; a genuinely signed-out visitor skips the
+    // extra hop.
+    const cookieStore = await cookies();
+    const hasStaleCookie = SESSION_COOKIE_NAMES.some((name) => Boolean(cookieStore.get(name)?.value));
+
+    if (hasStaleCookie) {
+      redirect(`/api/session/clear?next=${encodeURIComponent(ROUTES.signIn)}`);
+    }
+
     redirect(ROUTES.signIn);
   }
 

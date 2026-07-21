@@ -28,6 +28,7 @@ export interface DocumentParty {
   addressLines?: string[];
   taxId?: string | null;
   email?: string | null;
+  phone?: string | null;
   /** Legal identifiers below are issuer-only in practice — a client/supplier party never sets them. */
   registrationNumber?: string | null;
   nif?: string | null;
@@ -88,9 +89,6 @@ function LegalLines({ party }: { party: DocumentParty }) {
       {party.registrationNumber && <Text>N° Immatriculation : {party.registrationNumber}</Text>}
       {party.nif && <Text>NIF : {party.nif}</Text>}
       {party.articleNumber && <Text>N° Article : {party.articleNumber}</Text>}
-      {/* A client/supplier only ever has the generic `taxId` — shown under the
-          same French label since the whole document is French, not because
-          it is literally an NIF. */}
       {!party.nif && party.taxId && <Text>NIF : {party.taxId}</Text>}
     </>
   );
@@ -107,6 +105,7 @@ function InfoColumn({ label, party }: { label: string; party: DocumentParty }) {
       ))}
       <LegalLines party={party} />
       {party.email && <Text>{party.email}</Text>}
+      {party.phone && <Text>{party.phone}</Text>}
     </View>
   );
 }
