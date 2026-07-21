@@ -171,6 +171,9 @@ export const notificationTypeEnum = pgEnum('notification_type', [
 /** Scope of a settings row: company-wide default, or a single user's override. */
 export const settingScopeEnum = pgEnum('setting_scope', ['company', 'user']);
 
+/** Draft is never returned by the public portfolio API; only published projects are. */
+export const portfolioProjectStatusEnum = pgEnum('portfolio_project_status', ['draft', 'published']);
+
 export const reportTypeEnum = pgEnum('report_type', [
   'revenue',
   'expenses',

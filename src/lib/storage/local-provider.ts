@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { mkdir, rm, stat, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve, sep } from 'node:path';
+import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { dirname, extname, join, resolve, sep } from 'node:path';
 
 import { clientEnv, serverEnv } from '@/config/env';
 
@@ -9,7 +9,28 @@ import {
   UPLOAD_URL_TTL_SECONDS,
   type PresignedUpload,
   type StorageProvider,
+  type StoredObject,
 } from './provider';
+
+/**
+ * The local provider has no stored content-type metadata the way S3 does — a
+ * plain file on disk is just bytes. Inferred from the extension `buildStorageKey`
+ * already preserves; good enough for the handful of types this app ever uploads.
+ */
+const MIME_BY_EXTENSION: Record<string, string> = {
+  '.pdf': 'application/pdf',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.csv': 'text/csv',
+  '.txt': 'text/plain',
+  '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  '.doc': 'application/msword',
+  '.xls': 'application/vnd.ms-excel',
+};
 
 /**
  * Filesystem storage for development.
@@ -73,6 +94,13 @@ export class LocalStorageProvider implements StorageProvider {
     } catch {
       return false;
     }
+  }
+
+  async read(key: string): Promise<StoredObject> {
+    const body = await readFile(resolveKey(this.root, key));
+    const contentType = MIME_BY_EXTENSION[extname(key).toLowerCase()] ?? 'application/octet-stream';
+
+    return { body, contentType };
   }
 
   /** Used by the route handler once a signature checks out. */

@@ -14,6 +14,7 @@ import {
   UPLOAD_URL_TTL_SECONDS,
   type PresignedUpload,
   type StorageProvider,
+  type StoredObject,
 } from './provider';
 
 /** Production storage. Also drives S3-compatible services via `S3_ENDPOINT`. */
@@ -89,6 +90,16 @@ export class S3StorageProvider implements StorageProvider {
     });
 
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+  }
+
+  async read(key: string): Promise<StoredObject> {
+    const response = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key }));
+
+    if (!response.Body) throw new Error(`S3 object has no body: ${key}`);
+
+    const bytes = await response.Body.transformToByteArray();
+
+    return { body: Buffer.from(bytes), contentType: response.ContentType ?? 'application/octet-stream' };
   }
 
   async delete(key: string): Promise<void> {

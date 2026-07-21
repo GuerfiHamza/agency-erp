@@ -39,6 +39,7 @@ export * from './expenses';
 // Platform
 export * from './notifications';
 export * from './settings';
+export * from './portfolio';
 
 // Must come last: relations reference every table above.
 export * from './relations';

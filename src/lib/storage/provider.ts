@@ -20,6 +20,11 @@ export interface PresignedUpload {
   expiresAt: Date;
 }
 
+export interface StoredObject {
+  body: Buffer;
+  contentType: string;
+}
+
 export interface StorageProvider {
   readonly name: string;
   presignUpload(params: {
@@ -31,6 +36,16 @@ export interface StorageProvider {
   presignDownload(params: { key: string; expiresInSeconds?: number; download?: boolean }): Promise<string>;
   delete(key: string): Promise<void>;
   exists(key: string): Promise<boolean>;
+  /**
+   * Read an object's bytes directly, bypassing presigning.
+   *
+   * Presigned URLs cap out at a few days (S3's SigV4 hard limit is 7) — no use
+   * for a portfolio image meant to sit in an `<img src>` on a public marketing
+   * site indefinitely. This is that escape hatch: a public route handler reads
+   * through it and streams the response itself, with our own credentials,
+   * instead of handing out a URL that will eventually stop working.
+   */
+  read(key: string): Promise<StoredObject>;
 }
 
 /** Seconds a presigned URL stays valid. Short: it is a bearer token for the object. */

@@ -34,6 +34,20 @@ export async function findBySlug(slug: string): Promise<Company | null> {
 }
 
 /**
+ * The one live company row, for callers with no session to derive a tenant
+ * from — currently only the public portfolio API. Correct precisely because
+ * this deployment is locked to a single tenant (see MEMORY's "Single-tenant
+ * lockdown"); a multi-tenant version of this app could not use this.
+ */
+export async function findSoleCompany(): Promise<Company | null> {
+  const company = await db.query.companies.findFirst({
+    where: isNull(companies.deletedAt),
+  });
+
+  return company ?? null;
+}
+
+/**
  * Update a company's profile. Returns `null` if it does not exist.
  *
  * The `deleted_at IS NULL` in the WHERE is load-bearing, not defensive: without

@@ -50,6 +50,8 @@ export const RESOURCE_ACTIONS = {
   reports: ['read', 'export'],
   notifications: ['read', 'update'],
   settings: ['read', 'update'],
+  /** The public-website portfolio: projects, their technology/category catalogues, and the API key. */
+  portfolio: ['create', 'read', 'update', 'delete'],
 } as const satisfies Record<string, readonly AnyAction[]>;
 
 export type Resource = keyof typeof RESOURCE_ACTIONS;
@@ -156,6 +158,7 @@ export const SYSTEM_ROLES: SystemRoleDefinition[] = [
       ...all('reports'),
       ...all('notifications'),
       ...only('settings', ['read']),
+      ...all('portfolio'),
     ],
   },
   {
@@ -176,6 +179,7 @@ export const SYSTEM_ROLES: SystemRoleDefinition[] = [
       ...only('expenses', ['create', 'read', 'update']),
       ...all('notifications'),
       ...only('settings', ['read']),
+      ...only('portfolio', ['read']),
     ],
   },
 ];

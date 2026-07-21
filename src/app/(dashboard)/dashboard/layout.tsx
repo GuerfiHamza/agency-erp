@@ -9,6 +9,7 @@ import {
   FileSignature,
   FileText,
   FolderKanban,
+  Globe,
   Handshake,
   LayoutDashboard,
   ListChecks,
@@ -99,6 +100,10 @@ const NAV: {
         permission: 'notifications:read',
       },
     ],
+  },
+  {
+    label: 'Marketing',
+    items: [{ href: '/dashboard/portfolio', label: 'Portfolio', icon: Globe, permission: 'portfolio:read' }],
   },
   {
     label: 'Workspace',

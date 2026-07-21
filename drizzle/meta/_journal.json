@@ -43,6 +43,13 @@
       "when": 1784656291678,
       "tag": "0005_add_client_legal_identifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1784658756742,
+      "tag": "0006_add_portfolio_module",
+      "breakpoints": true
     }
   ]
 }
