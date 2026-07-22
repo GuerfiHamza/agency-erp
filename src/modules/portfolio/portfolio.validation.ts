@@ -80,6 +80,16 @@ export const projectFormSchema = z.object({
   status: z.enum(PORTFOLIO_PROJECT_STATUSES),
 
   technologyIds: z.array(z.uuid()).default([]),
+
+  /**
+   * Gallery images staged before the project row exists. Storage keys don't
+   * need a project id (same as `mainImageKey`) — only the `project_images`
+   * row does — so these ride along with the create call and get attached in
+   * the same request instead of forcing a save-then-upload two-step. Ignored
+   * on update: an existing project attaches/detaches gallery images
+   * immediately through their own actions (`ProjectGallery`), not this field.
+   */
+  galleryImageKeys: z.array(z.string().trim().min(1).max(500)).default([]),
 });
 
 export type ProjectFormValues = z.input<typeof projectFormSchema>;

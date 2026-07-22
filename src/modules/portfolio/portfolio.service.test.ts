@@ -45,6 +45,7 @@ function baseInput(overrides: Partial<ProjectInput> = {}): ProjectInput {
     isLive: false,
     status: 'draft',
     technologyIds: [],
+    galleryImageKeys: [],
     ...overrides,
   };
 }

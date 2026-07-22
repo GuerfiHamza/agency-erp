@@ -92,6 +92,7 @@ export function ProjectFormDialog({
       isLive: project?.isLive ?? false,
       status: project?.status ?? 'draft',
       technologyIds: project?.technologies.map((technology) => technology.id) ?? [],
+      galleryImageKeys: [],
     },
   });
 
@@ -357,12 +358,28 @@ export function ProjectFormDialog({
               />
             </FormItem>
 
-            {isEdit && (
-              <FormItem>
-                <FormLabel>More images</FormLabel>
+            <FormItem>
+              <FormLabel>More images</FormLabel>
+              {isEdit ? (
                 <ProjectGallery projectId={project!.id} images={project!.images} disabled={isPending} />
-              </FormItem>
-            )}
+              ) : (
+                <StagedGallery
+                  keys={form.watch('galleryImageKeys') ?? []}
+                  // A functional updater, not a plain array: several files upload
+                  // sequentially and each completion re-renders, so a later
+                  // file's `onUploaded` closure can be holding a stale `keys`
+                  // snapshot from before an earlier one landed. Reading the
+                  // current value via `form.getValues()` at call time avoids
+                  // clobbering it.
+                  onChange={(updater) =>
+                    form.setValue('galleryImageKeys', updater(form.getValues('galleryImageKeys') ?? []), {
+                      shouldDirty: true,
+                    })
+                  }
+                  disabled={isPending}
+                />
+              )}
+            </FormItem>
 
             <DialogFooter>
               <Button
@@ -454,6 +471,7 @@ function ProjectGallery({
         scope="portfolio"
         accept={['image/png', 'image/jpeg', 'image/webp', 'image/gif']}
         disabled={disabled || isPending}
+        multiple
         onUploaded={(file: UploadedFile) => {
           startTransition(async () => {
             const result = await addProjectImageAction({ projectId, storageKey: file.key });
@@ -464,6 +482,60 @@ function ProjectGallery({
             router.refresh();
           });
         }}
+      />
+    </div>
+  );
+}
+
+/**
+ * The create-mode counterpart of `ProjectGallery`: there's no project row yet
+ * to attach images to, so uploads are staged as plain storage keys in form
+ * state (identical posture to `mainImageKey`, which already does this) and
+ * sent to `createProjectAction` in the same request that creates the row.
+ */
+function StagedGallery({
+  keys,
+  onChange,
+  disabled,
+}: {
+  keys: string[];
+  onChange: (updater: (prev: string[]) => string[]) => void;
+  disabled: boolean;
+}) {
+  return (
+    <div className="space-y-3">
+      {keys.length > 0 && (
+        <div className="grid grid-cols-3 gap-2">
+          {keys.map((key) => (
+            <div key={key} className="group relative">
+              {/* eslint-disable-next-line @next/next/no-img-element -- see the main-image preview note above. */}
+              <img
+                src={previewUrl(key)}
+                alt=""
+                className="h-20 w-full rounded-md border border-border object-cover"
+              />
+              <Button
+                type="button"
+                variant="destructive"
+                size="icon-xs"
+                className="absolute top-1 right-1 opacity-0 transition-opacity group-hover:opacity-100"
+                onClick={() => onChange((prev) => prev.filter((existing) => existing !== key))}
+                disabled={disabled}
+                aria-label="Remove image"
+              >
+                <X aria-hidden />
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <FileUpload
+        scope="portfolio"
+        accept={['image/png', 'image/jpeg', 'image/webp', 'image/gif']}
+        disabled={disabled}
+        multiple
+        onUploaded={(file: UploadedFile) => onChange((prev) => [...prev, file.key])}
       />
     </div>
   );

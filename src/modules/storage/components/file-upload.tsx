@@ -24,6 +24,8 @@ interface Props {
   accept?: readonly string[];
   disabled?: boolean;
   className?: string;
+  /** Allow picking/dropping several files at once; each still gets its own presign + PUT, and `onUploaded` fires once per file as it lands. */
+  multiple?: boolean;
 }
 
 type Status = 'idle' | 'signing' | 'uploading' | 'done' | 'error';
@@ -51,6 +53,7 @@ export function FileUpload({
   accept = ALLOWED_UPLOAD_MIME_TYPES,
   disabled = false,
   className,
+  multiple = false,
 }: Props) {
   const inputId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -154,6 +157,29 @@ export function FileUpload({
     [onUploaded, scope],
   );
 
+  // Sequential, not Promise.all — keeps the single progress slot honest about
+  // which file it's describing, and a stalled upload doesn't fan out into a
+  // pile of concurrent requests against the presign endpoint.
+  const uploadAll = useCallback(
+    async (files: File[]) => {
+      for (const file of files) {
+        await upload(file);
+      }
+    },
+    [upload],
+  );
+
+  const handleFiles = useCallback(
+    (incoming: FileList | File[]) => {
+      const files = Array.from(incoming);
+      const [first] = files;
+      if (!first) return;
+      if (multiple) void uploadAll(files);
+      else void upload(first);
+    },
+    [multiple, upload, uploadAll],
+  );
+
   const isBusy = status === 'signing' || status === 'uploading';
 
   return (
@@ -169,8 +195,7 @@ export function FileUpload({
           event.preventDefault();
           setIsDragging(false);
           if (disabled || isBusy) return;
-          const file = event.dataTransfer.files[0];
-          if (file) void upload(file);
+          handleFiles(event.dataTransfer.files);
         }}
         className={cn(
           'flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-input px-6 py-8 text-center transition-colors',
@@ -180,9 +205,9 @@ export function FileUpload({
       >
         <Upload className="size-5 text-muted-foreground" aria-hidden />
         <span className="text-sm font-medium text-foreground">
-          Drop a file here, or <span className="text-primary">browse</span>
+          Drop {multiple ? 'files' : 'a file'} here, or <span className="text-primary">browse</span>
         </span>
-        <span className="text-xs text-muted-foreground">Up to {formatBytes(MAX_UPLOAD_BYTES)}</span>
+        <span className="text-xs text-muted-foreground">Up to {formatBytes(MAX_UPLOAD_BYTES)} each</span>
 
         <input
           id={inputId}
@@ -191,9 +216,9 @@ export function FileUpload({
           className="sr-only"
           accept={accept.join(',')}
           disabled={disabled || isBusy}
+          multiple={multiple}
           onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void upload(file);
+            if (event.target.files) handleFiles(event.target.files);
           }}
         />
       </label>

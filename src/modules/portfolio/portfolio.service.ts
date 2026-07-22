@@ -191,6 +191,7 @@ export async function createProject(companyId: string, input: ProjectInput) {
   await assertTechnologiesInCompany(companyId, input.technologyIds);
 
   if (input.mainImageKey) assertOwnPortfolioImageKey(companyId, input.mainImageKey);
+  for (const key of input.galleryImageKeys) assertOwnPortfolioImageKey(companyId, key);
 
   const slug = await generateProjectSlug(companyId, input.title);
 
@@ -208,7 +209,16 @@ export async function createProject(companyId: string, input: ProjectInput) {
 
   await repository.setProjectTechnologies(created.id, input.technologyIds);
 
-  logger.info('Portfolio project created', { companyId, projectId: created.id, slug });
+  for (const key of input.galleryImageKeys) {
+    await repository.addProjectImage(created.id, key);
+  }
+
+  logger.info('Portfolio project created', {
+    companyId,
+    projectId: created.id,
+    slug,
+    galleryImageCount: input.galleryImageKeys.length,
+  });
 
   return created;
 }
